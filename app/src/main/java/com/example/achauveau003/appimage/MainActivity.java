@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity{
     private Button button4;
     private Button button5;
     private Button button6;
+    private Menu menu;
 
 
     @Override
@@ -78,29 +79,34 @@ public class MainActivity extends AppCompatActivity{
         button5 = findViewById(R.id.button5_id);
         button5.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                contrastCouleurV2(bmap);
+                equalizationHistogramRS(bmap);
             }
         });
 
         button6 = findViewById(R.id.button6_id);
         button6.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                convolution(bmap,3,false);
+                convolution(bmap,5,false);
             }
         });
 
+        /*onCreateOptionsMenu(menu);
+        MenuItem reset_item = menu.add(0,R.id.reset,0,"Reset");
+        MenuItem toGreyRS_item = menu.add(1,R.id.toGreyRS,1,"toGreyRS");
+        */
+
+
+
+
 
     }
 
-    /*@SuppressLint("ResourceType")
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    /*public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.layout.menu, menu);
+        inflater.inflate(R.layout.activity_main, menu);
         return true;
     }
 
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
@@ -365,6 +371,7 @@ public class MainActivity extends AppCompatActivity{
         }
         int r,g,b;
         int pixels[]=new int[w*h];
+        int pixels_new[]=new int[w*h];
         bmp.getPixels(pixels,0,w,0,0,w,h);
         for(int i=0;i<(w*h);i++){
             int y=i/w;
@@ -393,9 +400,9 @@ public class MainActivity extends AppCompatActivity{
             sumR=0;
             sumG=0;
             sumB=0;
-            pixels[i] = Color.argb(1,r,g,b);
+            pixels_new[i] = Color.argb(1,r,g,b);
         }
-        bmp.setPixels(pixels,0,w,0,0,w,h);
+        bmp.setPixels(pixels_new,0,w,0,0,w,h);
 
     }
 
@@ -441,6 +448,34 @@ public class MainActivity extends AppCompatActivity{
         //8)  Detruire  le context , les  Allocation(s) et le  script
         input.destroy (); output.destroy ();
         colorizeScript.destroy (); rs.destroy ();
+    }
+
+    public void equalizationHistogramRS(Bitmap bmp){
+        int width = bmp.getWidth();
+        int height = bmp.getHeight();
+
+        //1)  Creer un  contexte  RenderScript
+        RenderScript rs = RenderScript.create(this);
+        //2)  Creer  des  Allocations  pour  passer  les  donnees
+        Allocation  input = Allocation.createFromBitmap(rs , bmp);
+        Allocation  output = Allocation.createTyped(rs , input.getType ());
+        //3)  Creer le  script
+        ScriptC_histEq histEqScript = new ScriptC_histEq(rs);
+        //4)  Copier  les  donnees  dans  les  Allocations
+        // ...
+        //5)  Initialiser  les  variables  globales  potentielles
+        histEqScript.set_size(width*height);
+        //6)  Lancer  le noyau
+        histEqScript.forEach_root(input, output);
+        histEqScript.invoke_createRemapArray();
+        histEqScript.forEach_remaptoRGB(output, input);
+        //7)  Recuperer  les  donnees  des  Allocation(s)
+        input.copyTo(bmp);
+        //8)  Detruire  le context , les  Allocation(s) et le  script
+        input.destroy (); output.destroy ();
+        histEqScript.destroy();
+        rs.destroy();
+
     }
 
     private  void  keepRedRS(Bitmap  bmp) {
