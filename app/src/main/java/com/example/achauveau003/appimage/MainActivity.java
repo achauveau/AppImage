@@ -406,6 +406,41 @@ public class MainActivity extends AppCompatActivity{
 
     }
 
+    private void convolution_contour(Bitmap bmp, int[][] kernelX, int [][] kernelY){
+        int w = bmp.getWidth();
+        int h = bmp.getHeight();
+        int pixels[]=new int[w*h];
+        int pixels_new[]=new int[w*h];
+        bmp.getPixels(pixels,0,w,0,0,w,h);
+        for(int i=0;i<(w*h);i++) {
+            int y=i/w;
+            int x=i%w;
+            int gx=0,gy=0;
+            for(int u=-1 ; u<1 ; u++){
+                for(int v=-1 ; v<1 ; v++){
+                    int x1 = x+u;
+                    int y1 = y+v;
+                    int j = (y1*w)+x1;
+                    int r = Color.red(pixels[j]);
+                    int g = Color.green(pixels[j]);
+                    int b = Color.blue(pixels[j]);
+                    double col1 = 0.3 * r + 0.59 * g + 0.11 * b;
+                    int col = (int)col1;
+                    gx=gx+col*kernelX[u+1][v+1];
+                    gy=gy+col*kernelY[u+1][v+1];
+
+                }
+            }
+            gx=gx/3;
+            gy=gy/3;
+            int newG = (int)Math.sqrt(gx*gx+gy*gy);
+            if(newG>255)newG=255;
+            pixels_new[i]=Color.argb(i,newG,newG,newG);
+
+        }
+        bmp.setPixels(pixels_new,0,w,0,0,w,h);
+    }
+
     //versions render script
 
     private  void  toGreyRS(Bitmap  bmp) {
