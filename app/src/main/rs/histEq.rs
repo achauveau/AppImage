@@ -2,6 +2,8 @@
 #pragma rs_fp_relaxed
 #pragma  rs  java_package_name(com.example.achauveau003.appimage)
 
+//source : https://medium.com/@qhutch/android-simple-and-fast-image-processing-with-renderscript-2fa8316273e1
+
 #include "rs_debug.rsh"
 
 int32_t histo[256];
